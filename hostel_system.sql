@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 23, 2026 at 11:19 AM
+-- Generation Time: Feb 04, 2026 at 11:48 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -42,7 +42,10 @@ CREATE TABLE `bookings` (
 --
 
 INSERT INTO `bookings` (`booking_id`, `property_id`, `student_id`, `payment_reference`, `amount`, `payment_status`, `booking_date`) VALUES
-(1, 1, 1, '224952239', 0.00, 'success', '2026-01-16 11:40:37');
+(1, 1, 1, '224952239', 120000.00, 'success', '2026-01-16 11:40:37'),
+(2, 2, 1, '197607371', 200000.00, 'success', '2026-02-03 12:52:52'),
+(3, 3, 1, '280425345', 500000.00, 'success', '2026-02-04 09:59:51'),
+(4, 4, 1, '562078408', 150000.00, 'success', '2026-02-04 10:32:11');
 
 -- --------------------------------------------------------
 
@@ -69,7 +72,9 @@ CREATE TABLE `properties` (
 
 INSERT INTO `properties` (`property_id`, `landlord_id`, `title`, `description`, `address`, `price`, `status`, `is_approved`, `image_url`, `created_at`) VALUES
 (1, 2, 'A room at osara market', 'The room has it\'s toilet and bathroom together and also it\'s kitchen, but the rules include that you must not damage any resources in the compound', 'No. 19, osara market street, osara', 120000.00, 'taken', 1, 'uploads/1768182655_room 1.jfif', '2026-01-12 01:50:55'),
-(2, 4, 'A room opposite police station', 'It is a well furnished room with it\'s own bedroom, kitchen, and toilet ', 'Room 9, No. 52, opposite police station, osara', 200000.00, 'available', 0, 'uploads/1768564688_room 1.jfif', '2026-01-16 11:58:08');
+(2, 4, 'A room opposite police station', 'It is a well furnished room with it\'s own bedroom, kitchen, and toilet ', 'Room 9, No. 52, opposite police station, osara', 200000.00, 'taken', 1, 'uploads/1768564688_room 1.jfif', '2026-01-16 11:58:08'),
+(3, 2, '2 bedroom flat', 'fully furnished', 'Osara market', 500000.00, 'taken', 1, 'uploads/1770199046_house 3.jfif', '2026-02-04 09:57:26'),
+(4, 4, 'A room', 'A room with AC', 'police station', 150000.00, 'taken', 1, 'uploads/1770201048_room 2.jfif', '2026-02-04 10:30:48');
 
 -- --------------------------------------------------------
 
@@ -131,13 +136,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `bookings`
 --
 ALTER TABLE `bookings`
-  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `properties`
 --
 ALTER TABLE `properties`
-  MODIFY `property_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `property_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `users`

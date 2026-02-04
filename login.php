@@ -35,7 +35,8 @@ if (isset($_POST['login'])) {
                     <input type="email" name="email" class="form-control mb-3" placeholder="Email" required>
                     <input type="password" name="password" class="form-control mb-3" placeholder="Password" required>
                     <button type="submit" name="login" class="btn btn-success w-100">Login</button>
-                </form>
+                    <a href="register.php">Register here</a>
+                </form> 
             </div>
         </div>
     </div>

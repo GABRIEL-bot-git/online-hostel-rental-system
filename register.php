@@ -1,38 +1,97 @@
-<?php 
-include 'includes/header.php'; 
+<?php
+include 'includes/db_connect.php';
 
-if (isset($_POST['register'])) {
-    $name = $_POST['name'];
-    $email = $_POST['email'];
-    $pass = password_hash($_POST['password'], PASSWORD_DEFAULT);
-    $role = $_POST['role'];
+// 1. Security Check
+if (!isset($_SESSION['user_id'])) { die("Access Denied"); }
 
-    $sql = "INSERT INTO users (full_name, email, password, role) VALUES ('$name', '$email', '$pass', '$role')";
-    if ($conn->query($sql)) {
-        echo "<div class='alert alert-success'>Registration Successful. <a href='login.php'>Login here</a></div>";
-    } else {
-        echo "<div class='alert alert-danger'>Error: " . $conn->error . "</div>";
-    }
+$ref = isset($_GET['ref']) ? $conn->real_escape_string($_GET['ref']) : '';
+$current_user_id = $_SESSION['user_id'];
+
+// 2. Fetch Booking + Property Details
+$sql = "SELECT bookings.*, properties.title, properties.address, properties.price, properties.landlord_id, 
+        users.full_name, users.email 
+        FROM bookings 
+        JOIN properties ON bookings.property_id = properties.property_id 
+        JOIN users ON bookings.student_id = users.user_id
+        WHERE bookings.payment_reference = '$ref'";
+
+$result = $conn->query($sql);
+if($result->num_rows == 0) { die("Receipt not found."); }
+$row = $result->fetch_assoc();
+
+// 3. Authorization Check
+$is_owner_student = ($row['student_id'] == $current_user_id);
+$is_owner_landlord = ($row['landlord_id'] == $current_user_id);
+$is_admin = ($_SESSION['role'] == 'admin');
+
+if (!$is_owner_student && !$is_owner_landlord && !$is_admin) {
+    die("Access Denied.");
 }
+
+// 4. THE FIX: Logic to handle '0' Amount
+// If the booking amount is 0 (due to old error), use the current property price.
+$display_amount = ($row['amount'] > 0) ? $row['amount'] : $row['price'];
 ?>
 
-<div class="row justify-content-center">
-    <div class="col-md-5">
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white">Register</div>
-            <div class="card-body">
-                <form method="POST">
-                    <input type="text" name="name" class="form-control mb-3" placeholder="Full Name" required>
-                    <input type="email" name="email" class="form-control mb-3" placeholder="Email" required>
-                    <input type="password" name="password" class="form-control mb-3" placeholder="Password" required>
-                    <select name="role" class="form-select mb-3">
-                        <option value="student">Student</option>
-                        <option value="landlord">Landlord</option>
-                    </select>
-                    <button type="submit" name="register" class="btn btn-primary w-100">Register</button>
-                </form>
-            </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Receipt - <?php echo $ref; ?></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #eee; font-family: 'Courier New', Courier, monospace; }
+        .receipt-container { background: #fff; max-width: 700px; margin: 50px auto; padding: 40px; border: 1px solid #ddd; }
+        .paid-stamp { border: 2px solid green; color: green; padding: 5px 20px; font-weight: bold; transform: rotate(-5deg); display: inline-block; }
+        @media print { .no-print { display: none; } body { background: white; } .receipt-container { border: none; margin: 0; box-shadow: none; } }
+    </style>
+</head>
+<body>
+
+<div class="receipt-container">
+    <div class="row mb-4">
+        <div class="col-8">
+            <h2 class="fw-bold">CUSTECH HOSTEL PORTAL</h2>
+            <p class="text-muted">Official Payment Receipt</p>
+        </div>
+        <div class="col-4 text-end">
+            <div class="paid-stamp">PAID</div>
         </div>
     </div>
+    <hr>
+    <div class="row mb-3">
+        <div class="col-6">
+            <h5 class="text-primary">Billed To:</h5>
+            <p class="mb-0"><strong><?php echo htmlspecialchars($row['full_name']); ?></strong></p>
+            <p><?php echo htmlspecialchars($row['email']); ?></p>
+        </div>
+        <div class="col-6 text-end">
+            <h5 class="text-primary">Receipt Info:</h5>
+            <p class="mb-0"><strong>Ref ID:</strong> <?php echo $row['payment_reference']; ?></p>
+            <p class="mb-0"><strong>Date:</strong> <?php echo date('d M Y', strtotime($row['booking_date'])); ?></p>
+        </div>
+    </div>
+
+    <table class="table table-bordered mt-4">
+        <thead class="table-light"><tr><th>Description</th><th class="text-end">Amount</th></tr></thead>
+        <tbody>
+            <tr>
+                <td>
+                    <strong><?php echo htmlspecialchars($row['title']); ?></strong><br>
+                    <small class="text-muted"><?php echo htmlspecialchars($row['address']); ?></small>
+                </td>
+                <td class="text-end">₦<?php echo number_format($display_amount); ?></td>
+            </tr>
+            <tr>
+                <td class="text-end"><strong>Total Paid</strong></td>
+                <td class="text-end bg-light"><strong>₦<?php echo number_format($display_amount); ?></strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="mt-5 text-center text-muted no-print">
+        <button onclick="window.print()" class="btn btn-dark">Print / Save PDF</button>
+    </div>
 </div>
-<?php include 'includes/footer.php'; ?>
+</body>
+</html>
