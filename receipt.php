@@ -30,6 +30,18 @@ if (!$is_owner_student && !$is_owner_landlord && !$is_admin) {
 
 // 4. Smart Price Display
 $display_amount = ($row['amount'] > 0) ? $row['amount'] : $row['price'];
+
+// 5. DYNAMIC STAMP LOGIC
+$stamp_text = "PAID";
+$stamp_color = "#198754"; // Default Green
+
+if ($row['booking_status'] == 'refund_requested') {
+    $stamp_text = "REFUND PENDING";
+    $stamp_color = "#ffc107"; // Yellow
+} elseif ($row['booking_status'] == 'refunded' || $row['booking_status'] == 'cancelled') {
+    $stamp_text = "VOID - REFUNDED";
+    $stamp_color = "#dc3545"; // Red
+}
 ?>
 
 <!DOCTYPE html>
@@ -39,7 +51,7 @@ $display_amount = ($row['amount'] > 0) ? $row['amount'] : $row['price'];
     <title>Receipt - <?php echo $ref; ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background: #eee; font-family: 'Times New Roman', Times, serif; } /* Changed font to match screenshot style */
+        body { background: #eee; font-family: 'Times New Roman', Times, serif; } 
         
         .receipt-container { 
             background: #fff; 
@@ -47,12 +59,13 @@ $display_amount = ($row['amount'] > 0) ? $row['amount'] : $row['price'];
             margin: 50px auto; 
             padding: 40px; 
             border: 1px solid #ddd; 
-            position: relative; /* For absolute positioning of stamp */
+            position: relative; 
         }
         
-        .paid-stamp { 
-            color: #198754; /* Bootstrap Success Green */
-            border: 3px solid #198754; 
+        /* The Dynamic Stamp CSS */
+        .dynamic-stamp { 
+            color: <?php echo $stamp_color; ?>; 
+            border: 3px solid <?php echo $stamp_color; ?>; 
             padding: 10px 20px; 
             font-weight: bold; 
             font-size: 1.2rem;
@@ -63,15 +76,12 @@ $display_amount = ($row['amount'] > 0) ? $row['amount'] : $row['price'];
             opacity: 0.8;
         }
 
-        /* --- PRINT STYLES (The Fix) --- */
         @media print {
-            body { 
-                background: white; 
-            }
+            body { background: white; }
             .receipt-container { 
                 width: 100%;
                 max-width: 800px; 
-                margin: 20px auto !important; /* Forces centering on paper */
+                margin: 20px auto !important; 
                 border: none; 
                 box-shadow: none;
                 padding: 20px;
@@ -90,7 +100,7 @@ $display_amount = ($row['amount'] > 0) ? $row['amount'] : $row['price'];
         <div style="width: 100px; height: 3px; background: #333; margin: 10px auto;"></div>
 
         <div class="position-absolute top-0 end-0 mt-2">
-            <div class="paid-stamp">PAID</div>
+            <div class="dynamic-stamp"><?php echo $stamp_text; ?></div>
         </div>
     </div>
 
@@ -137,15 +147,10 @@ $display_amount = ($row['amount'] > 0) ? $row['amount'] : $row['price'];
     <div class="mt-4 text-center no-print">
         <button onclick="window.print()" class="btn btn-dark btn-lg px-4"><i class="fa fa-print"></i> Print / Save PDF</button>
         <br><br>
-        <button onclick="window.history.back()" class="btn btn-outline-secondary btn-sm">Go Back</button>
+        <button onclick="window.close()" class="btn btn-outline-secondary btn-sm">Close Tab</button>
     </div>
 
 </div>
-
-<script>
-    // Slight delay to ensure styles load before print dialog opens
-    window.onload = function() { setTimeout(function(){ window.print(); }, 500); }
-</script>
 
 </body>
 </html>

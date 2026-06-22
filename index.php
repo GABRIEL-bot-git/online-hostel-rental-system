@@ -65,7 +65,7 @@
             <div class="col-md-8">
                 <form action="" method="GET" class="d-flex">
                     <input type="text" name="search" class="form-control search-input shadow-lg" 
-                           placeholder="Search by location (e.g. Savti Lodge, School Gate, Osara Market)..." 
+                           placeholder="Search by location (e.g. Savti Lodge, School Gate, Osara Market...)" 
                            value="<?php echo isset($_GET['search']) ? $_GET['search'] : ''; ?>">
                     <button type="submit" class="btn btn-warning search-btn shadow-lg">Search</button>
                 </form>
@@ -92,7 +92,7 @@
         }
 
         // Only show Approved and Available houses
-        $sql = "SELECT * FROM properties WHERE status='available' AND is_approved=1 $search_query ORDER BY created_at DESC";
+        $sql = "SELECT * FROM properties WHERE status='available' AND is_approved=1 $search_query ORDER BY date_listed DESC";
         $result = $conn->query($sql);
 
         if ($result->num_rows > 0) {

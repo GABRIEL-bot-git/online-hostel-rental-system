@@ -31,6 +31,18 @@ if (!$row) {
         
         <p class="mt-3"><?php echo nl2br(htmlspecialchars($row['description'])); ?></p>
         <p><strong>Address:</strong> <?php echo htmlspecialchars($row['address']); ?></p>
+
+        <div class="mt-4">
+            <h4 class="text-primary"><i class="fa fa-map-marker-alt"></i> Property Location</h4>
+            <div class="ratio ratio-16x9 shadow-sm rounded overflow-hidden">
+                <iframe 
+                    src="https://maps.google.com/maps?q=<?php echo urlencode($row['address'] . ', Kogi State, Nigeria'); ?>&t=&z=13&ie=UTF8&iwloc=&output=embed" 
+                    frameborder="0" 
+                    style="border:0;" 
+                    allowfullscreen>
+                </iframe>
+            </div>
+        </div>
         
         <?php if(isset($_SESSION['user_id'])): ?>
             <form id="paymentForm">

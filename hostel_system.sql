@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 04, 2026 at 11:48 AM
+-- Generation Time: Jun 22, 2026 at 06:53 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -31,21 +31,20 @@ CREATE TABLE `bookings` (
   `booking_id` int(11) NOT NULL,
   `property_id` int(11) DEFAULT NULL,
   `student_id` int(11) DEFAULT NULL,
-  `payment_reference` varchar(50) DEFAULT NULL,
-  `amount` decimal(10,2) DEFAULT NULL,
+  `payment_reference` varchar(100) NOT NULL,
+  `amount` decimal(15,2) NOT NULL,
   `payment_status` enum('pending','success','failed') DEFAULT 'pending',
-  `booking_date` timestamp NOT NULL DEFAULT current_timestamp()
+  `booking_status` enum('pending','confirmed','cancelled','refund_requested','refunded') DEFAULT 'pending',
+  `booking_date` timestamp NOT NULL DEFAULT current_timestamp(),
+  `refund_reason` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `bookings`
 --
 
-INSERT INTO `bookings` (`booking_id`, `property_id`, `student_id`, `payment_reference`, `amount`, `payment_status`, `booking_date`) VALUES
-(1, 1, 1, '224952239', 120000.00, 'success', '2026-01-16 11:40:37'),
-(2, 2, 1, '197607371', 200000.00, 'success', '2026-02-03 12:52:52'),
-(3, 3, 1, '280425345', 500000.00, 'success', '2026-02-04 09:59:51'),
-(4, 4, 1, '562078408', 150000.00, 'success', '2026-02-04 10:32:11');
+INSERT INTO `bookings` (`booking_id`, `property_id`, `student_id`, `payment_reference`, `amount`, `payment_status`, `booking_status`, `booking_date`, `refund_reason`) VALUES
+(1, 1, 3, '279487344', 250000.00, '', 'refunded', '2026-06-22 14:36:13', 'It\'s not what I expected');
 
 -- --------------------------------------------------------
 
@@ -56,25 +55,24 @@ INSERT INTO `bookings` (`booking_id`, `property_id`, `student_id`, `payment_refe
 CREATE TABLE `properties` (
   `property_id` int(11) NOT NULL,
   `landlord_id` int(11) DEFAULT NULL,
-  `title` varchar(255) DEFAULT NULL,
-  `description` text DEFAULT NULL,
-  `address` varchar(255) DEFAULT NULL,
-  `price` decimal(10,2) DEFAULT NULL,
+  `title` varchar(255) NOT NULL,
+  `description` text NOT NULL,
+  `address` varchar(255) NOT NULL,
+  `price` decimal(15,2) NOT NULL,
+  `image_url` varchar(255) NOT NULL,
   `status` enum('available','taken') DEFAULT 'available',
   `is_approved` tinyint(1) DEFAULT 0,
-  `image_url` varchar(255) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `date_listed` timestamp NOT NULL DEFAULT current_timestamp(),
+  `latitude` varchar(50) DEFAULT NULL,
+  `longitude` varchar(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `properties`
 --
 
-INSERT INTO `properties` (`property_id`, `landlord_id`, `title`, `description`, `address`, `price`, `status`, `is_approved`, `image_url`, `created_at`) VALUES
-(1, 2, 'A room at osara market', 'The room has it\'s toilet and bathroom together and also it\'s kitchen, but the rules include that you must not damage any resources in the compound', 'No. 19, osara market street, osara', 120000.00, 'taken', 1, 'uploads/1768182655_room 1.jfif', '2026-01-12 01:50:55'),
-(2, 4, 'A room opposite police station', 'It is a well furnished room with it\'s own bedroom, kitchen, and toilet ', 'Room 9, No. 52, opposite police station, osara', 200000.00, 'taken', 1, 'uploads/1768564688_room 1.jfif', '2026-01-16 11:58:08'),
-(3, 2, '2 bedroom flat', 'fully furnished', 'Osara market', 500000.00, 'taken', 1, 'uploads/1770199046_house 3.jfif', '2026-02-04 09:57:26'),
-(4, 4, 'A room', 'A room with AC', 'police station', 150000.00, 'taken', 1, 'uploads/1770201048_room 2.jfif', '2026-02-04 10:30:48');
+INSERT INTO `properties` (`property_id`, `landlord_id`, `title`, `description`, `address`, `price`, `image_url`, `status`, `is_approved`, `date_listed`, `latitude`, `longitude`) VALUES
+(1, 2, 'A room opposite CUSTECH small gate', 'Fully furnished room', 'Room 12, Glory lodge', 250000.00, 'uploads/1782138849_room 1.jfif', 'available', 1, '2026-06-22 14:34:09', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -84,11 +82,16 @@ INSERT INTO `properties` (`property_id`, `landlord_id`, `title`, `description`, 
 
 CREATE TABLE `users` (
   `user_id` int(11) NOT NULL,
-  `full_name` varchar(100) DEFAULT NULL,
-  `email` varchar(100) DEFAULT NULL,
-  `password` varchar(255) DEFAULT NULL,
-  `phone` varchar(15) DEFAULT NULL,
-  `role` enum('student','landlord','admin') DEFAULT 'student',
+  `full_name` varchar(100) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `role` enum('student','landlord','admin') NOT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `nin` varchar(20) DEFAULT NULL,
+  `bank_name` varchar(100) DEFAULT NULL,
+  `account_number` varchar(20) DEFAULT NULL,
+  `account_name` varchar(100) DEFAULT NULL,
+  `wallet_balance` decimal(15,2) DEFAULT 0.00,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -96,11 +99,31 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`user_id`, `full_name`, `email`, `password`, `phone`, `role`, `created_at`) VALUES
-(1, 'student', 'student@gmail.com', '$2y$10$RBlSY/D1EMLyxNu2RjbNPuqpoBowFLifGzosKHZg4/7//pRToB4k2', NULL, 'student', '2026-01-12 00:39:12'),
-(2, 'landlord', 'landlord@gmail.com', '$2y$10$Ne.b5MtGaOl.UkgaiwJmIebHzmi4kqLoY1zHP1rViqUiQf5mt1IO6', NULL, 'landlord', '2026-01-12 00:43:20'),
-(3, 'admin', 'admin@gmail.com', '$2y$10$DOfW8u2DUbjScBIhKNdxienIECPM9e8Gpdu.yLcsh0s.aYAgrOf22', NULL, 'admin', '2026-01-12 01:52:26'),
-(4, 'landlord2', 'landlord2@gmail.com', '$2y$10$Q4PkOQOqHC4/j4GIyFDoKeKT8tRqr2vJ2KpEFkZpLjaiCqN8AnEaO', NULL, 'landlord', '2026-01-12 18:42:16');
+INSERT INTO `users` (`user_id`, `full_name`, `email`, `password`, `role`, `phone`, `nin`, `bank_name`, `account_number`, `account_name`, `wallet_balance`, `created_at`) VALUES
+(1, 'Admin', 'admin@hostel.com', '$2y$10$W6OjG3Qu3eGxEPfk1WSB2eXzJMJwKJKpxJvlLbDv4qsuipCBqndE6', 'admin', '08012345678', '12345678910', NULL, NULL, NULL, 0.00, '2026-06-22 13:58:08'),
+(2, 'Landlord', 'landlord@hostel.com', '$2y$10$Thynb.IehGB934Gm74C6bOUqC6T3wS0MtufU8QGLzyX0xJ5aaNUWS', 'landlord', '08012345678', '12345678910', 'Opay', '8012345678', 'landlord', -50000.00, '2026-06-22 14:00:05'),
+(3, 'Student', 'student@hostel.com', '$2y$10$IS7C4SdyKoPR1Cvvmnv/BuUtf8lVcbRAce4pVgtxDMwhceBm8a0aC', 'student', '08012345678', '12345678910', NULL, NULL, NULL, 0.00, '2026-06-22 14:01:09');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `withdrawals`
+--
+
+CREATE TABLE `withdrawals` (
+  `withdrawal_id` int(11) NOT NULL,
+  `landlord_id` int(11) DEFAULT NULL,
+  `amount` decimal(15,2) NOT NULL,
+  `status` enum('pending','approved','paid') DEFAULT 'pending',
+  `request_date` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `withdrawals`
+--
+
+INSERT INTO `withdrawals` (`withdrawal_id`, `landlord_id`, `amount`, `status`, `request_date`) VALUES
+(1, 2, 50000.00, 'paid', '2026-06-22 14:37:38');
 
 --
 -- Indexes for dumped tables
@@ -111,6 +134,7 @@ INSERT INTO `users` (`user_id`, `full_name`, `email`, `password`, `phone`, `role
 --
 ALTER TABLE `bookings`
   ADD PRIMARY KEY (`booking_id`),
+  ADD UNIQUE KEY `payment_reference` (`payment_reference`),
   ADD KEY `property_id` (`property_id`),
   ADD KEY `student_id` (`student_id`);
 
@@ -129,6 +153,13 @@ ALTER TABLE `users`
   ADD UNIQUE KEY `email` (`email`);
 
 --
+-- Indexes for table `withdrawals`
+--
+ALTER TABLE `withdrawals`
+  ADD PRIMARY KEY (`withdrawal_id`),
+  ADD KEY `landlord_id` (`landlord_id`);
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -136,19 +167,25 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `bookings`
 --
 ALTER TABLE `bookings`
-  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `properties`
 --
 ALTER TABLE `properties`
-  MODIFY `property_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `property_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `withdrawals`
+--
+ALTER TABLE `withdrawals`
+  MODIFY `withdrawal_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- Constraints for dumped tables
@@ -158,14 +195,20 @@ ALTER TABLE `users`
 -- Constraints for table `bookings`
 --
 ALTER TABLE `bookings`
-  ADD CONSTRAINT `bookings_ibfk_1` FOREIGN KEY (`property_id`) REFERENCES `properties` (`property_id`),
-  ADD CONSTRAINT `bookings_ibfk_2` FOREIGN KEY (`student_id`) REFERENCES `users` (`user_id`);
+  ADD CONSTRAINT `bookings_ibfk_1` FOREIGN KEY (`property_id`) REFERENCES `properties` (`property_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `bookings_ibfk_2` FOREIGN KEY (`student_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `properties`
 --
 ALTER TABLE `properties`
   ADD CONSTRAINT `properties_ibfk_1` FOREIGN KEY (`landlord_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `withdrawals`
+--
+ALTER TABLE `withdrawals`
+  ADD CONSTRAINT `withdrawals_ibfk_1` FOREIGN KEY (`landlord_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

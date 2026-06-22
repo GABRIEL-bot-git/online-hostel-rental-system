@@ -16,15 +16,25 @@ if ($ref && $prop_id && $student_id) {
     $actual_amount = $price_row['price']; // Get the real price
 
     // 2. Insert Booking Record with the ACTUAL AMOUNT
-    $sql = "INSERT INTO bookings (property_id, student_id, payment_reference, amount, payment_status) 
-            VALUES ('$prop_id', '$student_id', '$ref', '$actual_amount', 'success')";
+    $sql = "INSERT INTO bookings (property_id, student_id, payment_reference, amount, payment_status, booking_status) 
+            VALUES ('$prop_id', '$student_id', '$ref', '$actual_amount', 'success', 'confirmed')";
 
     if ($conn->query($sql)) {
         // 3. Update Property Status to 'taken'
         $conn->query("UPDATE properties SET status='taken' WHERE property_id='$prop_id'");
 
+        // 4. NEW FEATURE: Credit the Landlord's Wallet
+        // First, find the landlord who owns this property
+        $landlord_query = $conn->query("SELECT landlord_id FROM properties WHERE property_id = '$prop_id'");
+        $landlord_row = $landlord_query->fetch_assoc();
+        $owner_id = $landlord_row['landlord_id'];
+
+        // Add the actual amount to their wallet balance
+        $conn->query("UPDATE users SET wallet_balance = wallet_balance + $actual_amount WHERE user_id = '$owner_id'");
+
         // Success UI
         $status_icon = "<div class='mb-4'><i class='fa fa-check-circle text-success' style='font-size: 80px;'></i></div>";
+        // ... (rest of your success message remains the same)
         $message = "<h2 class='fw-bold text-success'>Payment Successful!</h2>
                     <p class='lead text-muted'>Your accommodation has been secured.</p>
                     <div class='bg-light p-3 rounded mt-3 text-start d-inline-block'>
